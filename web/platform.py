@@ -55,11 +55,22 @@ class Platform:
         headers=get_comment_headers();url='https://www.zhihu.com/api/v4/me'
         headers['x-zse-96']=get_x_zse_96(url,{},cookies['d_c0'])
         try:raw=BoundedRequests.get(url,headers=headers,cookies=cookies).json()
-        except Exception:raise PlatformError('知乎账号检查未通过，请重新复制登录 Cookie')
+        except requests.HTTPError as exc:
+            if exc.response is not None and exc.response.status_code in (401,403):self.maintenance_event('expired' if exc.response.status_code==401 else 'risk')
+            raise PlatformError('知乎账号检查未通过，请在工作台核对登录和平台验证') from None
+        except Exception:raise PlatformError('知乎账号检查暂未完成，请稍后重试') from None
         if not raw.get('id') or raw.get('error'):raise PlatformError('知乎 Cookie 已失效或账号需要验证')
         normalized='; '.join(f'{k}={v}' for k,v in cookies.items())
         return self.persist(normalized,{'id':str(raw['id']),'name':text(raw.get('name')),'status':'connected','checked_at':time.time()})
-    def check(self):return self.connect(self.cookie())
+    def check(self):
+        result=self.connect(self.cookie());self.maintenance_event('connected');return result
+    def maintenance_event(self,state):
+        from .account_maintenance import Bridge
+        import hashlib
+        a=self.identity()
+        if a:
+            try:Bridge(self.path.parent).notify(a['id'],a['id'],state,hashlib.sha256(self.cookie().encode()).hexdigest())
+            except Exception:pass
     def disconnect(self):self.path.unlink(missing_ok=True)
     def search(self,*args):raise PlatformError('请使用专项工具采集文章或回答评论')
     def detail(self,*args):raise PlatformError('请使用专项工具采集文章或回答评论')
