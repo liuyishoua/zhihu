@@ -1,6 +1,6 @@
 # 知乎工作台
 
-浏览器入口： https://d.58nft.net:9455/ 。从 https://d.58nft.net/ 门户点击 `zhihu` 也可进入。
+浏览器入口： https://portal.example.com:20041/ 。从 https://portal.example.com/ 门户点击 `zhihu` 也可进入。
 
 五个新增工作台使用用户指定的统一访问密码，保存在各自 `.local/web/admin-password` 中（不写入源码或文档）。工作台登录与平台登录独立；进入后打开「账号连接」完成平台认证。新工作台没有预置平台账号。
 
@@ -36,13 +36,13 @@
 - `web/demo.py`：离线夹具，禁止真实登录和发布。
 - `.local/web/`：访问密码、平台凭据、会话与数据库，目录私有且 Git 忽略。
 
-本机接口 `http://127.0.0.1:8777`，正式服务 `zhihu-web.service` 与 `zhihu-proxy.service`。
+本机接口 `http://127.0.0.1:20009`，正式服务 `zhihu-web.service` 与 `zhihu-proxy.service`。
 
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-web.txt
 npm install
-.venv/bin/python -m web --port 8777 --public-origin https://d.58nft.net:9455
+.venv/bin/python -m web --port 20009 --public-origin https://portal.example.com:20041
 ```
 
 知乎 Node canvas 2.x 在 Node 22 上需要编译环境：`libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev`；签名脚本按仓库绝对路径加载。
@@ -52,7 +52,7 @@ npm install
 ```sh
 .venv/bin/python -m unittest discover -s web/tests -v
 node --check web/static/app.js
-.venv/bin/python -m web --demo --no-auth --port 8877 --data-dir /tmp/zhihu-preview
+.venv/bin/python -m web --demo --no-auth --port 20026 --data-dir /tmp/zhihu-preview
 ```
 
 `--no-auth` 仅允许回环地址且不接受公网 Origin。正式服务不用演示数据。
